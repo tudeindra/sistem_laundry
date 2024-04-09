@@ -2,11 +2,10 @@ const express = require("express");
 const app = express();
 const conn = require("./config/db");
 
-// Middleware untuk mengizinkan parsing body JSON
 app.use(express.json());
 
-app.get("/pelanggan", (req, res) => {
-  conn.query("SELECT * FROM Pelanggan", (err, rows) => {
+app.get("/transactions", (req, res) => {
+  conn.query("SELECT * FROM Transactions", (err, rows) => {
     if (err) {
       console.error(err);
       return res.status(500).json({
@@ -24,78 +23,76 @@ app.get("/pelanggan", (req, res) => {
   });
 });
 
-app.post("/pelanggan", (req, res) => {
-  const { name, alamat, telepon } = req.body;
+app.post("/transactions", (req, res) => {
+  const { customer_id, amount, date } = req.body;
 
-  if (!name || !alamat || !telepon) {
+  if (!customer_id || !amount || !date) {
     return res
       .status(400)
-      .json({ error: "Nama, Alamat, dan Telepon diperlukan" });
+      .json({ error: "ID Pelanggan, Jumlah, dan Tanggal diperlukan" });
   }
 
   const sql =
-    "INSERT INTO Pelanggan (Nama, Alamat, Nomor_telepon) VALUES (?, ?, ?)";
-  conn.query(sql, [name, alamat, telepon], (err, result) => {
+    "INSERT INTO Transactions (customer_id, amount, date) VALUES (?, ?, ?)";
+  conn.query(sql, [customer_id, amount, date], (err, result) => {
     if (err) {
-      console.error("Gagal menambahkan pelanggan:", err);
-      return res.status(500).send("Gagal menambahkan pelanggan");
+      console.error("Gagal menambahkan transaksi:", err);
+      return res.status(500).send("Gagal menambahkan transaksi");
     }
-    console.log("Pelanggan baru telah ditambahkan:", result);
-    res.send("Pelanggan baru telah ditambahkan");
+    console.log("Transaksi baru telah ditambahkan:", result);
+    res.send("Transaksi baru telah ditambahkan");
   });
 });
 
-app.put("/pelanggan/:id", (req, res) => {
+app.put("/transactions/:id", (req, res) => {
   const id = req.params.id;
-  const { id_pelanggan, name, alamat, telepon } = req.body;
+  const { customer_id, amount, date } = req.body;
 
-  // Periksa apakah ID_Pelanggan, nama, alamat, dan telepon telah disediakan
-  if (!id_pelanggan || !name || !alamat || !telepon) {
+  if (!customer_id || !amount || !date) {
     return res.status(400).json({
       success: false,
-      message: "ID_Pelanggan, Nama, Alamat, dan Telepon diperlukan",
+      message: "ID Pelanggan, Jumlah, dan Tanggal diperlukan",
     });
   }
 
   const sql =
-    "UPDATE Pelanggan SET ID_Pelanggan = ?, Nama = ?, Alamat = ?, Nomor_telepon = ? WHERE ID_Pelanggan = ?";
-  conn.query(sql, [id_pelanggan, name, alamat, telepon, id], (err, result) => {
+    "UPDATE Transactions SET customer_id = ?, amount = ?, date = ? WHERE id = ?";
+  conn.query(sql, [customer_id, amount, date, id], (err, result) => {
     if (err) {
-      console.error("Gagal memperbarui pelanggan:", err);
+      console.error("Gagal memperbarui transaksi:", err);
       return res.status(500).json({
         success: false,
-        message: "Gagal memperbarui pelanggan",
+        message: "Gagal memperbarui transaksi",
         error: err.message,
       });
     }
 
-    // Periksa apakah ada baris yang terpengaruh oleh operasi UPDATE
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: "Pelanggan tidak ditemukan",
+        message: "Transaksi tidak ditemukan",
       });
     }
 
-    console.log("Pelanggan telah diperbarui:", result);
+    console.log("Transaksi telah diperbarui:", result);
     res.json({
       success: true,
-      message: "Pelanggan telah diperbarui",
+      message: "Transaksi telah diperbarui",
     });
   });
 });
 
-app.delete("/pelanggan/:id", (req, res) => {
+app.delete("/transactions/:id", (req, res) => {
   const id = req.params.id;
 
-  const sql = "DELETE FROM Pelanggan WHERE ID_Pelanggan = ?";
+  const sql = "DELETE FROM Transactions WHERE id = ?";
   conn.query(sql, [id], (err, result) => {
     if (err) {
-      console.error("Gagal menghapus pelanggan:", err);
-      return res.status(500).send("Gagal menghapus pelanggan");
+      console.error("Gagal menghapus transaksi:", err);
+      return res.status(500).send("Gagal menghapus transaksi");
     }
-    console.log("Pelanggan telah dihapus:", result);
-    res.send("Pelanggan telah dihapus");
+    console.log("Transaksi telah dihapus:", result);
+    res.send("Transaksi telah dihapus");
   });
 });
 
